@@ -874,9 +874,25 @@ def main() -> None:
         print(f"monet {__version__}")
         return
 
-    from dotenv import load_dotenv
+    from pathlib import Path
 
-    load_dotenv()
+    # Source .env via shell to handle 'export' syntax correctly.
+    env_file = Path(".env")
+    if env_file.is_file():
+        import os
+        import shlex
+
+        for line in env_file.read_text().splitlines():
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            # Strip leading 'export '
+            if line.startswith("export "):
+                line = line[7:]
+            key, _, value = line.partition("=")
+            if key:
+                os.environ.setdefault(key.strip(), value.strip())
+
     MonetApp().run()
 
 
