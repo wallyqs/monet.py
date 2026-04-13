@@ -2,7 +2,7 @@
 
 A simple [DSPy](https://github.com/stanfordnlp/dspy) based coding agent with a [Textual](https://textual.textualize.io/) TUI.
 
-![monet code](screenshot.svg)
+![monet code](screenshots/screenshot.svg)
 
 ## Install
 
@@ -32,11 +32,31 @@ uv run monet
 ### ReAct-based chat
 
 Chat uses [ReAct](https://dspy.ai/api/modules/ReAct/) for multi-step
-reasoning with tool calling. The agent thinks, calls tools, observes
-results, and iterates until it has an answer. The trajectory
-(thinking, tool calls, results) is displayed in the content pane.
+reasoning with tool calling:
 
-By pressing Ctrl-o you can toggle on/off thinking.
+```python
+class ChatSignature(dspy.Signature):  # type: ignore[misc,valid-type]
+    """Respond to the user. Use tools when helpful. Maintain context from history.
+	...
+    Use Rich markup in log.write(): [bold], [dim], [#F4A300]amber[/], etc.
+    """
+
+    history: dspy.History = dspy.InputField(
+        desc="Prior turns of the conversation."
+    )
+    message: str = dspy.InputField(desc="The user's current message.")
+    response: str = dspy.OutputField(desc="Assistant reply.")
+
+self._react = dspy.ReAct(ChatSignature, tools=self._tools)
+return self._react
+```
+
+The agent thinks, calls tools, observes results, and iterates until it
+has an answer. The trajectory (thinking, tool calls, results) is
+displayed in the content pane.  By pressing `ctrl-o` you can toggle
+on/off thinking.
+
+![monet code](screenshots/thinking.svg)
 
 ### Multi-provider model switching
 
@@ -93,7 +113,10 @@ def handler(app, args: str) -> None:
     log.write(result.get("summary", result.get("error", "")))
 ```
 
-Commands also have full access to the [Textual](https://textual.textualize.io/) framework via the `app` object. For example, you can ask the agent: *"add a /screenshot monet command which uses app.save_screenshot()"* and it will generate:
+Commands also have full access to the
+[Textual](https://textual.textualize.io/) framework via the `app`
+object. For example, you can ask the agent: *"add a /screenshot monet
+command which uses app.save_screenshot()"* and it will generate: 
 
 ```python
 NAME = "/screenshot"
@@ -110,11 +133,14 @@ def handler(app, args: str) -> None:
 
 ### Slash command completion
 
-Type `/` to see available commands. `Tab` autocompletes from the filtered list. `ctrl+n` / `ctrl+p` navigate the picker.
+Type `/` to see available commands. `Tab` autocompletes from the
+filtered list. `ctrl+n` / `ctrl+p` navigate the picker. 
 
 ### Input history
 
-`ctrl+p` / `ctrl+n` navigate through previously submitted chat messages (when the command picker is not visible). Slash commands are not added to history. In-progress text is stashed and restored.
+`ctrl+p` / `ctrl+n` navigate through previously submitted chat
+messages (when the command picker is not visible). Slash commands are
+not added to history. In-progress text is stashed and restored. 
 
 ### Keyboard shortcuts
 
